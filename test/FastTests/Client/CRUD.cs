@@ -12,6 +12,47 @@ namespace FastTests.Client
         {
         }
 
+
+        [Fact]
+        public void CRUD_Operations_With_Guid_Id()
+        {
+            using (var store = GetDocumentStore())
+            {
+                using (var newSession = store.OpenSession())
+                {
+                    var user1 = new UserWithGuidId { Id = Guid.NewGuid(), Name = "user1" };
+                    newSession.Store(user1, user1.Id.ToString());
+                    var user2 = new UserWithGuidId { Id = Guid.NewGuid(), Name = "user2", Age = 1 };
+                    newSession.Store(user2, user2.Id.ToString());
+                    var user3 = new UserWithGuidId { Id = Guid.NewGuid(), Name = "user3", Age = 1 };
+                    newSession.Store(user3, user3.Id.ToString());
+                    var user4 = new UserWithGuidId { Id = Guid.NewGuid(), Name = "user4" };
+                    newSession.Store(user4, user4.Id.ToString());
+
+                    newSession.Delete(user2);
+                    user3.Age = 3;
+                    newSession.SaveChanges();
+
+                    var tempUser = newSession.Load<UserWithGuidId>(user2.Id.ToString());
+                    Assert.Null(tempUser);
+                    tempUser = newSession.Load<UserWithGuidId>(user3.Id.ToString());
+                    Assert.Equal(tempUser.Age, 3);
+                    user1 = newSession.Load<UserWithGuidId>(user1.Id.ToString());
+                    user4 = newSession.Load<UserWithGuidId>(user4.Id.ToString());
+
+                    newSession.Delete(user4);
+                    user1.Age = 10;
+                    newSession.SaveChanges();
+
+                    tempUser = newSession.Load<UserWithGuidId>(user4.Id.ToString());
+                    Assert.Null(tempUser);
+                    tempUser = newSession.Load<UserWithGuidId>(user1.Id.ToString());
+                    Assert.Equal(tempUser.Age, 10);
+                }
+            }
+        }
+
+
         [Fact]
         public void CRUD_Operations()
         {
