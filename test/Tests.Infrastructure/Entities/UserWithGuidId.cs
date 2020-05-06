@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Tests.Infrastructure.Entities
+namespace Raven.Tests.Core.Utils.Entities
 {
     public class UserWithGuidId
     {

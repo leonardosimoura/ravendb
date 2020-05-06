@@ -193,9 +193,11 @@ namespace Raven.Client.Documents.Identity
                     setIdentifier(Convert.ChangeType(id, memberInfo.Type()));
                     return;
                 }
-                catch (Exception)
+#pragma warning disable RDB0004 // Exception handler is empty or just logging
+                catch
                 {
                 }
+#pragma warning restore RDB0004 // Exception handler is empty or just logging
             }
 
             var isProperty = memberInfo.IsProperty();
