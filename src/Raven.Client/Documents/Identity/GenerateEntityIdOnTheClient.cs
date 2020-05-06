@@ -172,13 +172,13 @@ namespace Raven.Client.Documents.Identity
 
         private static void SetPropertyOrField(MemberInfo memberInfo, object entity, Action<object> setIdentifier, string id)
         {
+
             if (memberInfo.Type() == typeof(string))
             {
                 setIdentifier(id);
                 return;
             }
-
-            if (memberInfo.Type() == typeof(Guid))
+            else if (memberInfo.Type() == typeof(Guid))
             {
                 if (Guid.TryParse(id, out Guid convertedGuid))
                 {
@@ -186,10 +186,21 @@ namespace Raven.Client.Documents.Identity
                     return;
                 }
             }
+            else
+            {
+                try
+                {
+                    setIdentifier(Convert.ChangeType(id, memberInfo.Type()));
+                    return;
+                }
+                catch (Exception)
+                {
+                }
+            }
 
             var isProperty = memberInfo.IsProperty();
             var name = isProperty ? "property" : "field";
-            throw new NotSupportedException($"Cannot set identity value '{id}' on {name} '{memberInfo.Name}' for type '{entity.GetType().FullName}' because {name} type is not a string or a Guid.");
+            throw new NotSupportedException($"Cannot set identity value '{id}' on {name} '{memberInfo.Name}' for type '{entity.GetType().FullName}'.");
         }
     }
 }
