@@ -178,27 +178,11 @@ namespace Raven.Client.Documents.Identity
                 setIdentifier(id);
                 return;
             }
-            else if (memberInfo.Type() == typeof(Guid))
+            else if (memberInfo.Type() == typeof(Guid) && Guid.TryParse(id, out Guid convertedGuid))
             {
-                if (Guid.TryParse(id, out Guid convertedGuid))
-                {
-                    setIdentifier(convertedGuid);
-                    return;
-                }
-            }
-            else
-            {
-                try
-                {
-                    setIdentifier(Convert.ChangeType(id, memberInfo.Type()));
-                    return;
-                }
-#pragma warning disable RDB0004 // Exception handler is empty or just logging
-                catch
-                {
-                }
-#pragma warning restore RDB0004 // Exception handler is empty or just logging
-            }
+                setIdentifier(convertedGuid);
+                return;
+            }            
 
             var isProperty = memberInfo.IsProperty();
             var name = isProperty ? "property" : "field";
