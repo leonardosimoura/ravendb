@@ -161,7 +161,7 @@ namespace FastTests
             throw new TimeoutException(message);
         }
 
-        protected virtual DocumentStore GetDocumentStore(Options options = null, [CallerMemberName] string caller = null)
+        protected virtual DocumentStore GetDocumentStore(Options options = null, DocumentConventions conventions = null, [CallerMemberName] string caller = null)
         {
             try
             {
@@ -228,8 +228,12 @@ namespace FastTests
                     {
                         Urls = UseFiddler(serverToUse.WebUrl),
                         Database = name,
-                        Certificate = options.ClientCertificate
+                        Certificate = options.ClientCertificate,
+                       
                     };
+
+                    if ( conventions != null)                    
+                        store.Conventions = conventions;                    
 
                     options.ModifyDocumentStore?.Invoke(store);
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using Raven.Client.Documents.Conventions;
 using Raven.Client.Documents.Session;
 using Raven.Tests.Core.Utils.Entities;
 using Xunit;
@@ -52,6 +54,53 @@ namespace FastTests.Client
             }
         }
 
+        [Fact]
+        public void CRUD_Operations_With_Guid_Id_By_Conventions()
+        {
+
+            var conventions = new DocumentConventions();
+            conventions.RegisterAsyncIdConvention<UserWithGuidId>(
+                   (dbname, model) =>
+                   Task.FromResult(string.Format("{0}", model.Id == Guid.Empty ? Guid.NewGuid() : model.Id)));
+
+            using (var store = GetDocumentStore(conventions: conventions))
+            {
+               
+
+                using (var newSession = store.OpenSession())
+                {
+                    var user1 = new UserWithGuidId {Name = "user1" };
+                    newSession.Store(user1);
+                    var user2 = new UserWithGuidId { Name = "user2", Age = 1 };
+                    newSession.Store(user2);
+                    var user3 = new UserWithGuidId { Name = "user3", Age = 1 };
+                    newSession.Store(user3);
+                    var user4 = new UserWithGuidId {  Name = "user4" };
+                    newSession.Store(user4);
+
+                    newSession.Delete(user2);
+                    user3.Age = 3;
+                    newSession.SaveChanges();
+
+                    var tempUser = newSession.Load<UserWithGuidId>(user2.Id.ToString());
+                    Assert.Null(tempUser);
+                    tempUser = newSession.Load<UserWithGuidId>(user3.Id.ToString());
+                    Assert.Equal(tempUser.Age, 3);
+                    user1 = newSession.Load<UserWithGuidId>(user1.Id.ToString());
+                    user4 = newSession.Load<UserWithGuidId>(user4.Id.ToString());
+
+                    newSession.Delete(user4);
+                    user1.Age = 10;
+                    newSession.SaveChanges();
+
+                    tempUser = newSession.Load<UserWithGuidId>(user4.Id.ToString());
+                    Assert.Null(tempUser);
+                    tempUser = newSession.Load<UserWithGuidId>(user1.Id.ToString());
+                    Assert.Equal(tempUser.Age, 10);
+                }
+            }
+        }
+
 
         [Fact]
         public void CRUD_Operations()
@@ -61,12 +110,12 @@ namespace FastTests.Client
                 using (var newSession = store.OpenSession())
                 {
                     newSession.Store(new User { Name = "user1" }, "users/1");
-                    var user2 = new User {Name = "user2", Age = 1};
+                    var user2 = new User { Name = "user2", Age = 1 };
                     newSession.Store(user2, "users/2");
                     var user3 = new User { Name = "user3", Age = 1 };
                     newSession.Store(user3, "users/3");
                     newSession.Store(new User { Name = "user4" }, "users/4");
-                    
+
                     newSession.Delete(user2);
                     user3.Age = 3;
                     newSession.SaveChanges();
@@ -77,7 +126,7 @@ namespace FastTests.Client
                     Assert.Equal(tempUser.Age, 3);
                     var user1 = newSession.Load<User>("users/1");
                     var user4 = newSession.Load<User>("users/4");
-                    
+
                     newSession.Delete(user4);
                     user1.Age = 10;
                     newSession.SaveChanges();
@@ -106,7 +155,7 @@ namespace FastTests.Client
 
                     newSession.Delete(user2);
                     user3.Age = 3;
-                    
+
                     Assert.Equal(newSession.Advanced.WhatChanged().Count, 4);
                     newSession.SaveChanges();
 
@@ -139,14 +188,14 @@ namespace FastTests.Client
                 {
                     var family = new Family()
                     {
-                        Names = new[] {"Hibernating Rhinos", "RavenDB"}
+                        Names = new[] { "Hibernating Rhinos", "RavenDB" }
                     };
                     newSession.Store(family, "family/1");
                     newSession.SaveChanges();
 
                     var newFamily = newSession.Load<Family>("family/1");
 
-                    newFamily.Names = new[] {"Toli", "Mitzi", "Boki"};
+                    newFamily.Names = new[] { "Toli", "Mitzi", "Boki" };
                     Assert.Equal(newSession.Advanced.WhatChanged().Count, 1);
                     newSession.SaveChanges();
                 }
@@ -168,7 +217,7 @@ namespace FastTests.Client
                     newSession.SaveChanges();
 
                     var newFamily = newSession.Load<Family>("family/1");
-                    newFamily.Names = new[] {"Hibernating Rhinos", "RavenDB"};
+                    newFamily.Names = new[] { "Hibernating Rhinos", "RavenDB" };
                     Assert.Equal(newSession.Advanced.WhatChanged().Count, 0);
                     newFamily.Names = new[] { "RavenDB", "Hibernating Rhinos" };
                     Assert.Equal(newSession.Advanced.WhatChanged().Count, 1);
@@ -287,7 +336,7 @@ namespace FastTests.Client
                 {
                     var family = new FamilyMembers()
                     {
-                        Members = new [] {
+                        Members = new[] {
                             new member()
                             {
                                 Name = "Hibernating Rhinos",
@@ -320,8 +369,8 @@ namespace FastTests.Client
 
                     var changes = newSession.Advanced.WhatChanged();
 
-                    Assert.Equal(1 , changes.Count);
-                    Assert.Equal(4 , changes["family/1"].Length);
+                    Assert.Equal(1, changes.Count);
+                    Assert.Equal(4, changes["family/1"].Length);
 
                     Array.Sort(changes["family/1"], (x, y) => x.FieldFullName.CompareTo(y.FieldFullName));
 
@@ -418,7 +467,7 @@ namespace FastTests.Client
                             {
                                 str = new [] {"c", "d"}
                             }
-                        } 
+                        }
                     };
                     newSession.Store(arr, "arr/1");
                     newSession.SaveChanges();
